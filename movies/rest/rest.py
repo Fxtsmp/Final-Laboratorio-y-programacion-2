@@ -1,7 +1,7 @@
 # all this must be work with a db
 from ..db import get_db
 from flask import Blueprint, jsonify, request
-
+from ..login.login import login_required
 
 rest_api = Blueprint('rest_api', __name__,  url_prefix='/api')
 
@@ -21,6 +21,7 @@ def get_data():
 
 
 @rest_api.route('/films')
+@login_required
 def get_films():
     """ return jsonify({'films':films}) """
     db = get_db()
@@ -49,7 +50,8 @@ def get_films():
 @rest_api.route('/films/<film_name>')
 def get_film(film_name):
     db = get_db()
-    films = db.execute("SELECT * FROM films WHERE title = ?;",
+    film_name = "%"+film_name+"%"
+    films = db.execute('SELECT * FROM films WHERE title LIKE ?;',
                        (film_name,)).fetchall()
     films_json = []
     for film in films:
@@ -78,6 +80,7 @@ def get_directors():
     db = get_db()
     directors = db.execute('SELECT director FROM films;').fetchall()
     director_json = []
+    directors = list(set(directors))
     for director in directors:
         director_json.append(director['director'])
     return jsonify({
@@ -89,6 +92,7 @@ def get_directors():
 def get_genders():
     db = get_db()
     genders = db.execute('SELECT gender FROM films;').fetchall()
+    genders = list(set(genders))
     genders_json = []
     for film in genders:
         genders_json.append(film['gender'])
@@ -141,9 +145,10 @@ def get_films_with_cover():
         "films with covers": films_with_covers
     })
 
-# ABM
+# ABM - need login 
 # adding data
 # i can  take this with get method but not is recommendanble
+@login_required # <---------------
 @rest_api.route('/films/nfilm', methods=['POST'])
 def add_film():
     new_film = {
@@ -175,6 +180,7 @@ def add_film():
 # updated data
 # always the front autocomplete all field
 # and thhe user modified the necesary field
+@login_required
 @rest_api.route('/films/<film_title>', methods=['PUT'])
 def edit_film(film_title):
     db = get_db()
@@ -214,6 +220,7 @@ def edit_film(film_title):
 # list all films with x name and select the correct
 # because the film name can be duplicate and be diferents
 # films
+@login_required
 @rest_api.route('/films/<film_title>', methods=['DELETE'])
 def delete_film(film_title):
     db = get_db()
