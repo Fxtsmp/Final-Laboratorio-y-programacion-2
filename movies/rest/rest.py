@@ -19,7 +19,32 @@ def get_data():
         }
     )
 
+#get the last ten films added
+@rest_api.route('/last_films_add')
+def get_last_films():
+    """ return jsonify({'films':films}) """
+    db = get_db()
+    films = db.execute(
+        'SELECT * FROM films ORDER BY id DESC LIMIT 10'
+    ).fetchall()
+    films_json = []
+    for film in films:
+        films_json.append(
+            {
+                "id": film['id'],
+                "title": film['title'],
+                "year": film['year'],
+                "director": film['director'],
+                "gender": film['gender'],
+                "sinopsis": film['sinopsis'],
+                "cover": film['cover']
+            }
+        )
+    return jsonify({
+        "films": films_json
+    })
 
+#get all films
 @rest_api.route('/films')
 @login_required
 def get_films():
